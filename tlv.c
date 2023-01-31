@@ -829,6 +829,56 @@ static void slave_rx_sync_timing_data_pre_send(struct tlv_extra *extra)
 	}
 }
 
+//stefan add
+//master sends this TLV to slave. slave receives TLV, and processes it in this function.
+static int slave_tx_event_timestamps_post_recv(struct tlv_extra *extra)
+{
+	struct slave_tx_event_timestamps_tlv *slave_data =
+		(struct slave_tx_event_timestamps_tlv *) extra->tlv;
+	size_t base_size = sizeof(slave_data->sourcePortIdentity), n_items;
+	struct slave_tx_event_timestamps_record *record;
+
+	//ensuring correct size of TLV
+	if (tlv_array_invalid(extra->tlv, base_size, sizeof(*record))) {
+		return -EBADMSG;
+	}
+	n_items = tlv_array_count(extra->tlv, base_size, sizeof(*record));
+	record = slave_data->record;
+
+	NTOHS(slave_data->sourcePortIdentity.portNumber);
+
+	while (n_items) {
+		NTOHS(record->sequenceId);
+		timestamp_net2host(&record->eventEgressTimestamp);
+		n_items--;
+		record++;
+	}
+
+	return 0;
+}
+
+//master sends this TLV to slave. converts to network byte order before sending. (preparation)
+static void slave_tx_event_timestamps_pre_send(struct tlv_extra *extra)
+{
+	struct slave_tx_event_timestamps_tlv *slave_data =
+		(struct slave_tx_event_timestamps_tlv *) extra->tlv;
+	size_t base_size = sizeof(slave_data->sourcePortIdentity), n_items;
+	struct slave_tx_event_timestamps_record *record;
+
+	n_items = tlv_array_count(extra->tlv, base_size, sizeof(*record));
+	record = slave_data->record;
+
+	HTONS(slave_data->sourcePortIdentity.portNumber);
+
+	while (n_items) {
+		HTONS(record->sequenceId);
+		timestamp_host2net(&record->eventEgressTimestamp);
+		n_items--;
+		record++;
+	}
+}
+//stefan end
+
 static int unicast_message_type_valid(uint8_t message_type)
 {
 	message_type >>= 4;
@@ -1002,7 +1052,9 @@ int tlv_post_recv(struct tlv_extra *extra)
 		result = slave_rx_sync_timing_data_post_revc(extra);
 		break;
 	case TLV_SLAVE_RX_SYNC_COMPUTED_DATA:
+		break;
 	case TLV_SLAVE_TX_EVENT_TIMESTAMPS:
+		result = slave_tx_event_timestamps_post_recv(extra);
 		break;
 	case TLV_SLAVE_DELAY_TIMING_DATA_NP:
 		result = slave_delay_timing_data_post_revc(extra);
@@ -1067,6 +1119,7 @@ void tlv_pre_send(struct TLV *tlv, struct tlv_extra *extra)
 		break;
 	case TLV_SLAVE_RX_SYNC_COMPUTED_DATA:
 	case TLV_SLAVE_TX_EVENT_TIMESTAMPS:
+		slave_tx_event_timestamps_pre_send(extra);
 		break;
 	case TLV_SLAVE_DELAY_TIMING_DATA_NP:
 		slave_delay_timing_data_pre_send(extra);

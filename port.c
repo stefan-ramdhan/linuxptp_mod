@@ -1594,6 +1594,7 @@ int port_tx_announce(struct port *p, struct address *dst, uint16_t sequence_id)
 	msg->header.logMessageInterval = p->logAnnounceInterval;
 
 	msg->header.flagField[1] = tp.flags;
+	//printf("second flag field = %d\n", tp.flags);//stefan
 
 	if (dst) {
 		msg->address = *dst;
@@ -2777,7 +2778,7 @@ static enum fsm_event bc_event(struct port *p, int fd_index)
 	enum fsm_event event = EV_NONE;
 	struct ptp_message *msg;
 	int cnt, fd = p->fda.fd[fd_index], err;
-
+	//printf("fd_index = %d\n", fd_index); //stefan
 	switch (fd_index) {
 	case FD_ANNOUNCE_TIMER:
 	case FD_SYNC_RX_TIMER:
@@ -2853,6 +2854,9 @@ static enum fsm_event bc_event(struct port *p, int fd_index)
 
 	case FD_SYNC_TX_TIMER:
 		pr_debug("%s: master sync timeout", p->log_name);
+		//struct ptp_message *msg; //stefan ptp
+		//struct timePropertiesDS tp = clock_time_properties(p->clock); //stefan ptp
+		//msg->header.flagField[1] = tp.flags; //stefan ptp
 		port_set_sync_tx_tmo(p);
 		p->service_stats.master_sync_timeout++;
 		return port_tx_sync(p, NULL, p->seqnum.sync++) ?

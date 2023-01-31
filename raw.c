@@ -333,7 +333,6 @@ static int raw_recv(struct transport *t, int fd, void *buf, int buflen,
 	unsigned char *ptr = buf;
 	struct eth_hdr *hdr;
 	int cnt, hlen;
-
 	if (raw->vlan) {
 		hlen = sizeof(struct vlan_hdr);
 	} else {
@@ -354,11 +353,13 @@ static int raw_recv(struct transport *t, int fd, void *buf, int buflen,
 		cnt -= PRP_TRAILER_LEN;
 
 	if (raw->vlan) {
+		//printf("is vlan\n"); //stefan
 		if (ETH_P_1588 == ntohs(hdr->type)) {
 			pr_notice("raw: disabling VLAN mode");
 			raw->vlan = 0;
 		}
 	} else {
+
 		if (ETH_P_8021Q == ntohs(hdr->type)) {
 			pr_notice("raw: switching to VLAN mode");
 			raw->vlan = 1;

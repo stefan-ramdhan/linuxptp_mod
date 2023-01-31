@@ -283,6 +283,22 @@ struct slave_rx_sync_timing_data_tlv {
 	  sizeof(struct slave_rx_sync_timing_data_tlv)) /		\
 	 sizeof(struct slave_rx_sync_timing_record))
 
+//stefan add
+struct slave_tx_event_timestamps_record {
+	UInteger16          sequenceId;
+	struct Timestamp    eventEgressTimestamp;
+} PACKED;
+
+struct slave_tx_event_timestamps_tlv {
+	Enumeration16        type;
+	UInteger16           length;
+	struct PortIdentity  sourcePortIdentity;
+	Enumeration8 		 eventMessageType; /* reserved | eventMessageType */
+	Octet				 reserved;
+	struct slave_tx_event_timestamps_record record[0];
+} PACKED;
+//stefan end
+
 typedef struct Integer96 {
 	uint16_t nanoseconds_msb;
 	uint64_t nanoseconds_lsb;

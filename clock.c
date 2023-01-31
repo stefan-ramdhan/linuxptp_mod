@@ -679,6 +679,7 @@ static void clock_update_grandmaster(struct clock *c)
 	c->tds.currentUtcOffset                 = c->utc_offset;
 	c->tds.flags                            = c->time_flags;
 	c->tds.timeSource                       = c->time_source;
+	//printf("GM flags = %d", c->tds.flags); //stefan add
 }
 
 static void clock_update_slave(struct clock *c)
@@ -699,6 +700,7 @@ static void clock_update_slave(struct clock *c)
 	pds->grandmasterPriority2      = msg->announce.grandmasterPriority2;
 	tds.currentUtcOffset           = msg->announce.currentUtcOffset;
 	tds.flags                      = msg->header.flagField[1];
+	//printf("FLAGS = %d", tds.flags); //stefan
 	tds.timeSource                 = msg->announce.timeSource;
 	if (!(tds.flags & PTP_TIMESCALE)) {
 		pr_warning("foreign master not using PTP timescale");
@@ -1237,7 +1239,9 @@ struct clock *clock_create(enum clock_type type, struct config *config,
 	if (!c->slave_event_monitor) {
 		pr_err("failed to create slave event monitor");
 		return NULL;
-	} else {printf("created slave_eventm monitiro\n");} //stefan
+	} // else {
+		//printf("created slave_event monitor\n");
+		// } //stefan
 
 	/* Create the ports. */
 	STAILQ_FOREACH(iface, &config->interfaces, list) {
@@ -1882,7 +1886,7 @@ enum servo_state clock_synchronize(struct clock *c, tmv_t ingress, tmv_t origin)
 void clock_sync_interval(struct clock *c, int n)
 {
 	int shift;
-
+	
 	shift = c->freq_est_interval - n;
 	if (shift < 0)
 		shift = 0;
@@ -1923,6 +1927,7 @@ void clock_update_leap_status(struct clock *c)
 	}
 
 	clock_gettime(c->clkid, &ts);
+	//printf("TIME_FLAGS = %d", c->time_flags);//stefan add
 	if (c->time_flags & PTP_TIMESCALE) {
 		ts.tv_sec -= c->utc_offset;
 	}
@@ -1974,6 +1979,7 @@ void clock_update_time_properties(struct clock *c, struct timePropertiesDS tds)
 
 static void handle_state_decision_event(struct clock *c)
 {
+	
 	struct foreign_clock *best = NULL, *fc;
 	struct ClockIdentity best_id;
 	struct port *piter;

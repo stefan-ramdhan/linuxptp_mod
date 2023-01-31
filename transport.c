@@ -46,6 +46,7 @@ int transport_send(struct transport *t, struct fdarray *fda,
 		   enum transport_event event, struct ptp_message *msg)
 {
 	int len = ntohs(msg->header.messageLength);
+	msg->header.flagField[1] = 0x08;//stefan  PTP_TIMESCALE = 1
 
 	return t->send(t, fda, event, 0, msg, len, NULL, &msg->hwts);
 }
@@ -54,6 +55,7 @@ int transport_peer(struct transport *t, struct fdarray *fda,
 		   enum transport_event event, struct ptp_message *msg)
 {
 	int len = ntohs(msg->header.messageLength);
+	msg->header.flagField[1] = 0x08;//stefan  PTP_TIMESCALE = 1
 
 	return t->send(t, fda, event, 1, msg, len, NULL, &msg->hwts);
 }
